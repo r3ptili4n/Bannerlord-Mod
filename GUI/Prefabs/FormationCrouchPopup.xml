@@ -1,0 +1,80 @@
+<Prefab>
+  <Window>
+    <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="BlankWhiteSquare_9" Color="#0000007F" AlphaFactor="0.5">
+      <Children>
+        <!-- Main panel -->
+        <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="460" SuggestedHeight="280" HorizontalAlignment="Center" VerticalAlignment="Center" Sprite="BlankWhiteSquare_9" Color="#1E140AFF">
+          <Children>
+
+            <!-- Title -->
+            <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="40" MarginLeft="20" MarginRight="20" MarginTop="14" Text="@Title" Brush.FontSize="22" Brush.FontColor="#FFD599FF" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+
+            <!-- Separator -->
+            <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="2" MarginLeft="20" MarginRight="20" MarginTop="58" Sprite="BlankWhiteSquare_9" Color="#3D2913FF" />
+
+            <!-- Formation selector row -->
+            <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="340" SuggestedHeight="40" HorizontalAlignment="Center" MarginTop="70">
+              <Children>
+                <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="100" SuggestedHeight="40" HorizontalAlignment="Left" VerticalAlignment="Center">
+                  <Children>
+                    <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Text="◀ 上一个" Brush.FontSize="16" Brush.FontColor="#FFD599FF" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+                    <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Command.Click="ExecuteScrollLeft" />
+                  </Children>
+                </Widget>
+                <TextWidget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="140" SuggestedHeight="40" HorizontalAlignment="Center" VerticalAlignment="Center" Text="@FormationLabelText" Brush.FontSize="20" Brush.FontColor="#FFD599FF" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+                <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="100" SuggestedHeight="40" HorizontalAlignment="Right" VerticalAlignment="Center">
+                  <Children>
+                    <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Text="下一个 ▶" Brush.FontSize="16" Brush.FontColor="#FFD599FF" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+                    <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Command.Click="ExecuteScrollRight" />
+                  </Children>
+                </Widget>
+              </Children>
+            </Widget>
+
+            <!-- Crouch radio group -->
+            <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="400" SuggestedHeight="66" HorizontalAlignment="Center" MarginTop="124">
+              <Children>
+                <TextWidget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="80" SuggestedHeight="30" HorizontalAlignment="Left" VerticalAlignment="Top" Text="士兵蹲下：" Brush.FontSize="16" Brush.FontColor="#FFD599FF" Brush.TextHorizontalAlignment="Left" Brush.TextVerticalAlignment="Center" />
+
+                <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="74" SuggestedHeight="30" HorizontalAlignment="Left" VerticalAlignment="Top" MarginLeft="84">
+                  <Children>
+                    <TextWidget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="18" SuggestedHeight="30" HorizontalAlignment="Left" VerticalAlignment="Center" Text="○" Brush.FontSize="16" Brush.FontColor="#8B7355FF" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+                    <TextWidget IsVisible="@IsCrouchDown" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="18" SuggestedHeight="30" HorizontalAlignment="Left" VerticalAlignment="Center" Text="●" Brush.FontSize="12" Brush.FontColor="#FFD599FF" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+                    <TextWidget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="48" SuggestedHeight="30" HorizontalAlignment="Left" VerticalAlignment="Center" MarginLeft="20" Text="下蹲" Brush.FontSize="16" Brush.FontColor="#FFD599FF" Brush.TextHorizontalAlignment="Left" Brush.TextVerticalAlignment="Center" />
+                    <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Command.Click="ExecuteSetCrouchDown" />
+                  </Children>
+                </Widget>
+
+                <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="74" SuggestedHeight="30" HorizontalAlignment="Left" VerticalAlignment="Top" MarginLeft="166">
+                  <Children>
+                    <TextWidget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="18" SuggestedHeight="30" HorizontalAlignment="Left" VerticalAlignment="Center" Text="○" Brush.FontSize="16" Brush.FontColor="#8B7355FF" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+                    <TextWidget IsVisible="@IsCrouchUp" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="18" SuggestedHeight="30" HorizontalAlignment="Left" VerticalAlignment="Center" Text="●" Brush.FontSize="12" Brush.FontColor="#FFD599FF" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+                    <TextWidget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="48" SuggestedHeight="30" HorizontalAlignment="Left" VerticalAlignment="Center" MarginLeft="20" Text="起身" Brush.FontSize="16" Brush.FontColor="#FFD599FF" Brush.TextHorizontalAlignment="Left" Brush.TextVerticalAlignment="Center" />
+                    <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Command.Click="ExecuteSetCrouchUp" />
+                  </Children>
+                </Widget>
+              </Children>
+            </Widget>
+
+            <!-- Buttons -->
+            <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="340" SuggestedHeight="36" HorizontalAlignment="Center" VerticalAlignment="Bottom" MarginBottom="24">
+              <Children>
+                <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="140" SuggestedHeight="36" HorizontalAlignment="Left" VerticalAlignment="Center" Brush="Popup.Done.Button" Command.Click="ExecuteConfirm">
+                  <Children>
+                    <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="20" VerticalAlignment="Center" Text="@ConfirmText" Brush="Popup.Button.Text" Brush.FontSize="16" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+                  </Children>
+                </ButtonWidget>
+                <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="140" SuggestedHeight="36" HorizontalAlignment="Right" VerticalAlignment="Center" Brush="Popup.Done.Button" Command.Click="ExecuteCancel">
+                  <Children>
+                    <TextWidget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="20" VerticalAlignment="Center" Text="@CancelText" Brush="Popup.Button.Text" Brush.FontSize="16" Brush.TextHorizontalAlignment="Center" Brush.TextVerticalAlignment="Center" />
+                  </Children>
+                </ButtonWidget>
+              </Children>
+            </Widget>
+
+          </Children>
+        </Widget>
+      </Children>
+    </Widget>
+  </Window>
+</Prefab>

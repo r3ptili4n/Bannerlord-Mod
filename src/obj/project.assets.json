@@ -1,0 +1,148 @@
+{
+  "version": 4,
+  "targets": {
+    "net472": {
+      "Bannerlord.MCM/5.11.4": {
+        "type": "package",
+        "dependencies": {
+          "Lib.Harmony": "2.2.2"
+        },
+        "compile": {
+          "lib/netstandard2.0/MCMv5.dll": {
+            "related": ".pdb"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/MCMv5.dll": {
+            "related": ".pdb"
+          }
+        }
+      },
+      "Lib.Harmony/2.2.2": {
+        "type": "package",
+        "compile": {
+          "lib/net472/0Harmony.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net472/_._": {
+            "related": ".xml"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Bannerlord.MCM/5.11.4": {
+      "sha512": "I2gmSrIxFerbdij2Hqf5UEGRvSKC6LF3zVJzjlzjUJf2/6n4tTLSA/exD91WVFbC9ax3O7B4sFvYt6YyXR4UcA==",
+      "type": "package",
+      "path": "bannerlord.mcm/5.11.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "MCM-128-w-2.png",
+        "bannerlord.mcm.5.11.4.nupkg.sha512",
+        "bannerlord.mcm.nuspec",
+        "lib/netstandard2.0/MCMv5.dll",
+        "lib/netstandard2.0/MCMv5.pdb"
+      ]
+    },
+    "Lib.Harmony/2.2.2": {
+      "sha512": "70KvWz+DiUELxafsYL/LHxA/jH3PDWeApLo/VwtnrpTvRWQ/eUdPfS/l5funmhZWOy41QXw6UjVv+6C57Nx77A==",
+      "type": "package",
+      "path": "lib.harmony/2.2.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "HarmonyLogo.png",
+        "LICENSE",
+        "lib.harmony.2.2.2.nupkg.sha512",
+        "lib.harmony.nuspec",
+        "lib/net35/0Harmony.dll",
+        "lib/net35/0Harmony.xml",
+        "lib/net45/0Harmony.dll",
+        "lib/net45/0Harmony.xml",
+        "lib/net472/0Harmony.dll",
+        "lib/net472/0Harmony.xml",
+        "lib/net48/0Harmony.dll",
+        "lib/net48/0Harmony.xml",
+        "lib/net5.0/0Harmony.dll",
+        "lib/net5.0/0Harmony.xml",
+        "lib/net6.0/0Harmony.dll",
+        "lib/net6.0/0Harmony.xml",
+        "lib/netcoreapp3.0/0Harmony.dll",
+        "lib/netcoreapp3.0/0Harmony.xml",
+        "lib/netcoreapp3.1/0Harmony.dll",
+        "lib/netcoreapp3.1/0Harmony.xml"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net472": [
+      "Bannerlord.MCM >= 5.11.4"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\LiamYOzO\\.nuget\\packages\\": {},
+    "D:\\VS\\vs_sdkandtools\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "E:\\steam\\steamapps\\common\\Mount & Blade II Bannerlord\\Modules\\SoldierBehaviorTweaks\\src\\AIBannerFix.csproj",
+      "projectName": "SoldierBehaviorTweaks",
+      "projectPath": "E:\\steam\\steamapps\\common\\Mount & Blade II Bannerlord\\Modules\\SoldierBehaviorTweaks\\src\\AIBannerFix.csproj",
+      "packagesPath": "C:\\Users\\LiamYOzO\\.nuget\\packages\\",
+      "outputPath": "E:\\steam\\steamapps\\common\\Mount & Blade II Bannerlord\\Modules\\SoldierBehaviorTweaks\\src\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "D:\\VS\\vs_sdkandtools\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\LiamYOzO\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net472"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net472": {
+          "framework": "net472",
+          "targetAlias": "net472",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.300"
+    },
+    "frameworks": {
+      "net472": {
+        "framework": "net472",
+        "targetAlias": "net472",
+        "dependencies": {
+          "Bannerlord.MCM": {
+            "target": "Package",
+            "version": "[5.11.4, )"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.302\\RuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

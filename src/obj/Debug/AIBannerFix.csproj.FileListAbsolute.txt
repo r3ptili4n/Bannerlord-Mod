@@ -1,0 +1,34 @@
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\bin\Win64_Shipping_Client\SoldierBehaviorTweaks.dll
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\bin\Win64_Shipping_Client\SoldierBehaviorTweaks.pdb
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.csproj.AssemblyReference.cache
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.GeneratedMSBuildEditorConfig.editorconfig
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.AssemblyInfoInputs.cache
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.AssemblyInfo.cs
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.csproj.CoreCompileInputs.cache
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBanner.8C4C0409.Up2Date
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\SoldierBehaviorTweaks.dll
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\SoldierBehaviorTweaks.pdb
+X:\bin\Win64_Shipping_Client\SoldierBehaviorTweaks.dll
+X:\bin\Win64_Shipping_Client\SoldierBehaviorTweaks.pdb
+X:\bin\Win64_Shipping_Client\MCMv5.dll
+X:\obj\Debug\AIBannerFix.csproj.AssemblyReference.cache
+X:\obj\Debug\AIBannerFix.GeneratedMSBuildEditorConfig.editorconfig
+X:\obj\Debug\AIBannerFix.AssemblyInfoInputs.cache
+X:\obj\Debug\AIBannerFix.AssemblyInfo.cs
+X:\obj\Debug\AIBannerFix.csproj.CoreCompileInputs.cache
+X:\obj\Debug\AIBanner.8C4C0409.Up2Date
+X:\obj\Debug\SoldierBehaviorTweaks.dll
+X:\obj\Debug\SoldierBehaviorTweaks.pdb
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\bin\Win64_Shipping_Client\SoldierBehaviorTweaks.dll
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\bin\Win64_Shipping_Client\SoldierBehaviorTweaks.pdb
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.csproj.AssemblyReference.cache
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.GeneratedMSBuildEditorConfig.editorconfig
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.AssemblyInfoInputs.cache
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.AssemblyInfo.cs
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.csproj.CoreCompileInputs.cache
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBanner.8C4C0409.Up2Date
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\SoldierBehaviorTweaks.dll
+E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\SoldierBehaviorTweaks.pdb
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\bin\TempVerify\SoldierBehaviorTweaks.dll
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\bin\TempVerify\SoldierBehaviorTweaks.pdb
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\bin\TempVerify\MCMv5.dll
