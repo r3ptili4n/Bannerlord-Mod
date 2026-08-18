@@ -23,7 +23,7 @@ namespace SoldierBehaviorTweaks
         private readonly List<(Vec2 Position, Team Team)> _cavalryCache = new();
         private readonly Dictionary<int, float> _lastSwitchTime = new();
         private const float SwitchCooldown = 3f;
-        private const float ThrustPolearmFavorMultiplier = 0.01f;
+        private const float ThrustPolearmFavorMultiplier = 0f;
 
         private static readonly HashSet<WeaponClass> ThrowingClasses = new()
         {
@@ -200,8 +200,6 @@ namespace SoldierBehaviorTweaks
                     if (discourageThrustPolearm && !agent.HasMount
                         && (!friendOnlyDiscourageThrustPolearm || agent.Team == null || agent.Team.IsPlayerAlly))
                     {
-                        ApplyThrustPolearmAIFavorPenalty(agent, equipment, currentSlot);
-
                         if (IsThrustOnlyPolearm(weapon)
                             && (!_lastSwitchTime.TryGetValue(agent.Index, out float lastSwitch)
                                 || mission.CurrentTime - lastSwitch >= SwitchCooldown))
@@ -210,6 +208,7 @@ namespace SoldierBehaviorTweaks
                             if (betterSlot != EquipmentIndex.None)
                             {
                                 SwitchToSlot(agent, betterSlot);
+                                SuppressPolearmSelection(agent);
                                 _lastSwitchTime[agent.Index] = mission.CurrentTime;
                             }
                         }
@@ -329,22 +328,6 @@ namespace SoldierBehaviorTweaks
             return result;
         }
 
-        private static void ApplyThrustPolearmAIFavorPenalty(Agent agent, MissionEquipment eq, EquipmentIndex currentSlot)
-        {
-            if (!HasThrustOnlyPolearm(eq) || !HasBetterThanThrustPolearm(eq))
-                return;
-
-            AgentDrivenProperties properties = agent.AgentDrivenProperties;
-            if (properties == null)
-                return;
-
-            if (properties.AiWeaponFavorMultiplierPolearm <= ThrustPolearmFavorMultiplier)
-                return;
-
-            properties.AiWeaponFavorMultiplierPolearm = ThrustPolearmFavorMultiplier;
-            agent.UpdateCustomDrivenProperties();
-        }
-
         private static bool HasBetterThanThrustPolearm(MissionEquipment eq)
         {
             for (EquipmentIndex i = EquipmentIndex.WeaponItemBeginSlot; i <= EquipmentIndex.Weapon3; i++)
@@ -407,6 +390,17 @@ namespace SoldierBehaviorTweaks
         private static void SwitchToSlot(Agent agent, EquipmentIndex slot)
         {
             agent.SetWieldedItemIndexAsClient(Agent.HandIndex.MainHand, slot, true, false, 0);
+        }
+
+        private static void SuppressPolearmSelection(Agent agent)
+        {
+            AgentDrivenProperties properties = agent.AgentDrivenProperties;
+            if (properties == null)
+                return;
+
+            properties.AiWeaponFavorMultiplierPolearm = ThrustPolearmFavorMultiplier;
+            agent.UpdateCustomDrivenProperties();
+            agent.InvalidateAIWeaponSelections();
         }
 
         private bool HasNearbyEnemyCavalry(Agent agent, float range)
