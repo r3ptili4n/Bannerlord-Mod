@@ -13,6 +13,7 @@ namespace SoldierBehaviorTweaks
         private float _elapsed = -0.3f;
         private const float CheckInterval = 1f;
         private const float RearDistance = 1f;
+        private const float LooseRearSideOffsetMin = 1.2f;
         private const float ChargePushDistance = 3f;
         private const float ChargeEnemyMaxDist = 10f;
 
@@ -191,6 +192,11 @@ namespace SoldierBehaviorTweaks
             float formationDepth = formation.Depth;
             float rearOffset = (formationDepth / 2f) + RearDistance;
             Vec2 rearVec = formationPos.AsVec2 - direction * rearOffset;
+            if (formation.IsLoose)
+            {
+                float sideOffset = MBMath.ClampFloat(formation.Interval + formation.UnitDiameter, LooseRearSideOffsetMin, 3f);
+                rearVec += direction.RightVec() * sideOffset;
+            }
 
             // 已经靠近目标位置时跳过，避免抖动。
             Vec2 bearerVec = bearer.Position.AsVec2;

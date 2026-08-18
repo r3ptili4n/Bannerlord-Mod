@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SoldierBehaviorTweaks")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8de7fa407f5862ad8068a55f88a82b1816c0a200")]
 [assembly: System.Reflection.AssemblyProductAttribute("SoldierBehaviorTweaks")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SoldierBehaviorTweaks")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

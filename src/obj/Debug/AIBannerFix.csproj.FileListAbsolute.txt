@@ -32,3 +32,4 @@ E:\steam\steamapps\common\MB2Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\De
 E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\bin\TempVerify\SoldierBehaviorTweaks.dll
 E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\bin\TempVerify\SoldierBehaviorTweaks.pdb
 E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\bin\TempVerify\MCMv5.dll
+E:\steam\steamapps\common\Mount & Blade II Bannerlord\Modules\SoldierBehaviorTweaks\src\obj\Debug\AIBannerFix.sourcelink.json
