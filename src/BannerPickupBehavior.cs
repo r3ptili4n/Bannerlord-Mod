@@ -202,9 +202,7 @@ namespace SoldierBehaviorTweaks
             {
                 if (!searcher.CanQuickPickUp(spawnedItem)) return;
 
-                EquipmentIndex pickupSlot;
-                searcher.GetWeaponToReplaceOnQuickAction(spawnedItem, out pickupSlot);
-                searcher.OnItemPickup(spawnedItem, pickupSlot, out bool _);
+                searcher.OnItemPickup(spawnedItem, EquipmentIndex.ExtraWeaponSlot, out bool _);
                 searcher.DisableScriptedMovement();
                 Mission?.GetMissionBehavior<AgentMarkingSystem>()?.QueueBannerRefresh(searcher.Formation);
                 _assignedAgentByBanner.Remove(bannerKey);

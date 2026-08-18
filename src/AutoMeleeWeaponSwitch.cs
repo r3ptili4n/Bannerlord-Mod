@@ -81,6 +81,23 @@ namespace SoldierBehaviorTweaks
         private static bool IsShield(MissionWeapon weapon)
             => HasAnyUsageClass(weapon, ShieldClasses);
 
+        public override void OnAgentBuild(Agent agent, Banner banner)
+        {
+            if (agent == null || !agent.IsAIControlled || agent.IsMainAgent || agent.HasMount)
+                return;
+
+            SoldierBehaviorTweaksSettings? settings = SoldierBehaviorTweaksSettings.Instance;
+            if (settings == null || !settings.DiscourageThrustPolearm)
+                return;
+
+            if (settings.FriendOnlyDiscourageThrustPolearm && agent.Team != null && !agent.Team.IsPlayerAlly)
+                return;
+
+            MissionEquipment equipment = agent.Equipment;
+            if (equipment != null && HasThrustOnlyPolearm(equipment) && HasBetterThanThrustPolearm(equipment))
+                SuppressPolearmSelection(agent);
+        }
+
         public override void OnMissionTick(float dt)
         {
             Mission mission = Mission;
@@ -200,16 +217,24 @@ namespace SoldierBehaviorTweaks
                     if (discourageThrustPolearm && !agent.HasMount
                         && (!friendOnlyDiscourageThrustPolearm || agent.Team == null || agent.Team.IsPlayerAlly))
                     {
+                        bool hasThrustOnlyPolearm = HasThrustOnlyPolearm(equipment);
+                        bool hasBetterWeapon = hasThrustOnlyPolearm && HasBetterThanThrustPolearm(equipment);
+                        if (hasBetterWeapon)
+                            SuppressPolearmSelection(agent);
+
                         if (IsThrustOnlyPolearm(weapon)
                             && (!_lastSwitchTime.TryGetValue(agent.Index, out float lastSwitch)
                                 || mission.CurrentTime - lastSwitch >= SwitchCooldown))
                         {
-                            EquipmentIndex betterSlot = FindBetterThanThrustPolearm(equipment, currentSlot);
-                            if (betterSlot != EquipmentIndex.None)
+                            if (hasBetterWeapon)
                             {
-                                SwitchToSlot(agent, betterSlot);
-                                SuppressPolearmSelection(agent);
-                                _lastSwitchTime[agent.Index] = mission.CurrentTime;
+                                EquipmentIndex betterSlot = FindBetterThanThrustPolearm(equipment, currentSlot);
+                                if (betterSlot != EquipmentIndex.None)
+                                {
+                                    SwitchToSlot(agent, betterSlot);
+                                    SuppressPolearmSelection(agent);
+                                    _lastSwitchTime[agent.Index] = mission.CurrentTime;
+                                }
                             }
                         }
                     }
@@ -396,6 +421,9 @@ namespace SoldierBehaviorTweaks
         {
             AgentDrivenProperties properties = agent.AgentDrivenProperties;
             if (properties == null)
+                return;
+
+            if (properties.AiWeaponFavorMultiplierPolearm <= ThrustPolearmFavorMultiplier)
                 return;
 
             properties.AiWeaponFavorMultiplierPolearm = ThrustPolearmFavorMultiplier;
