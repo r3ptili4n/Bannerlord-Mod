@@ -24,7 +24,14 @@ namespace SoldierBehaviorTweaks
         public string Title
         {
             get => _title;
-            set { if (_title != value) { _title = value; OnPropertyChanged(nameof(Title)); } }
+            set
+            {
+                if (_title != value)
+                {
+                    _title = value;
+                    OnPropertyChanged(nameof(Title));
+                }
+            }
         }
 
         [DataSourceProperty]
@@ -59,17 +66,19 @@ namespace SoldierBehaviorTweaks
                     OnPropertyChanged(nameof(CrouchMode));
                     OnPropertyChanged(nameof(IsCrouchDown));
                     OnPropertyChanged(nameof(IsCrouchUp));
+                    OnPropertyChanged(nameof(CurrentStateText));
                 }
             }
         }
 
         [DataSourceProperty] public bool IsCrouchDown => _crouchMode == 1;
         [DataSourceProperty] public bool IsCrouchUp => _crouchMode == 0;
+        [DataSourceProperty] public string CurrentStateText => _crouchMode == 1 ? "当前状态：下蹲" : "当前状态：起身";
 
         [DataSourceProperty] public string ConfirmText => "确认";
         [DataSourceProperty] public string CancelText => "取消";
 
-        private void UpdateTitle() => Title = $"编队 {_selectedFormationIndex + 1} — 蹲下控制";
+        private void UpdateTitle() => Title = $"编队 {_selectedFormationIndex + 1} 下蹲设置";
 
         private void UpdateFormationState()
         {
