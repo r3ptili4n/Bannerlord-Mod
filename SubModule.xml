@@ -2,7 +2,7 @@
 <Module xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/BUTR/Bannerlord.XmlSchemas/master/SubModule.xsd">
   <Id value="SoldierBehaviorTweaks" />
-  <Name value="Soldier Behavior Tweaks" />
+  <Name value="部队行为微调" />
   <Version value="v1.4.8" />
   <DefaultModule value="false" />
   <ModuleCategory value="Singleplayer" />
@@ -22,7 +22,7 @@
   </DependedModuleMetadatas>
   <SubModules>
     <SubModule>
-      <Name value="Soldier Behavior Tweaks" />
+      <Name value="部队行为微调" />
       <DLLName value="SoldierBehaviorTweaks.dll" />
       <SubModuleClassType value="SoldierBehaviorTweaks.SubModule" />
       <Tags />
