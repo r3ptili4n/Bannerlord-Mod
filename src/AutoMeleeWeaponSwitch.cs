@@ -101,7 +101,7 @@ namespace SoldierBehaviorTweaks
         public override void OnMissionTick(float dt)
         {
             Mission mission = Mission;
-            if (mission == null || !mission.IsLoadingFinished)
+            if (mission == null || mission.MissionEnded || !mission.IsLoadingFinished)
                 return;
 
             if (!IsCombatMission())
@@ -173,8 +173,11 @@ namespace SoldierBehaviorTweaks
                                 || fixedSlot != currentSlot))
                         {
                             int rangedUsageIndex = weapon.GetRangedUsageIndex();
-                            agent.SetUsageIndexOfWeaponInSlotAsClient(currentSlot, rangedUsageIndex);
-                            _throwNoMeleeFixed[agent.Index] = currentSlot;
+                            if (rangedUsageIndex >= 0)
+                            {
+                                agent.SetUsageIndexOfWeaponInSlotAsClient(currentSlot, rangedUsageIndex);
+                                _throwNoMeleeFixed[agent.Index] = currentSlot;
+                            }
                         }
 
                         Agent target = agent.GetTargetAgent();
@@ -414,11 +417,21 @@ namespace SoldierBehaviorTweaks
 
         private static void SwitchToSlot(Agent agent, EquipmentIndex slot)
         {
+            if (agent == null || !agent.IsActive() || !agent.IsAIControlled || agent.IsMainAgent)
+                return;
+
+            MissionEquipment equipment = agent.Equipment;
+            if (equipment == null || slot == EquipmentIndex.None || equipment[slot].IsEmpty)
+                return;
+
             agent.SetWieldedItemIndexAsClient(Agent.HandIndex.MainHand, slot, true, false, 0);
         }
 
         private static void SuppressPolearmSelection(Agent agent)
         {
+            if (agent == null || !agent.IsActive() || !agent.IsAIControlled || agent.IsMainAgent)
+                return;
+
             AgentDrivenProperties properties = agent.AgentDrivenProperties;
             if (properties == null)
                 return;
