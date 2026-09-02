@@ -105,6 +105,9 @@ namespace SoldierBehaviorTweaks
         public override void OnMissionTick(float dt)
         {
             base.OnMissionTick(dt);
+            if (Mission == null || Mission.MissionEnded)
+                return;
+
             HandleInput();
             MaintainCrouchStates(dt);
         }
@@ -270,23 +273,37 @@ namespace SoldierBehaviorTweaks
 
         private void SafeCleanupPopup()
         {
-            if (_popupVM != null)
+            try
             {
-                _popupVM.OnConfirmed -= OnPopupConfirmed;
-                _popupVM.OnCancelled -= OnPopupCancelled;
-                _popupVM.OnFinalize();
-                _popupVM = null;
+                if (_popupVM != null)
+                {
+                    _popupVM.OnConfirmed -= OnPopupConfirmed;
+                    _popupVM.OnCancelled -= OnPopupCancelled;
+                    try
+                    {
+                        _popupVM.OnFinalize();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.Print($"[SoldierBehaviorTweaks] Popup finalize failed: {ex.Message}");
+                    }
+                }
             }
-            _popupLayer = null;
-            _popupOpen = false;
-            RestoreMissionPauseAfterPopup();
+            finally
+            {
+                _popupVM = null;
+                _popupLayer = null;
+                _popupOpen = false;
+                RestoreMissionPauseAfterPopup();
+            }
         }
 
         private void PauseMissionForPopup()
         {
             try
             {
-                if (MissionState.Current == null)
+                if (Mission == null || Mission.MissionEnded || !Mission.IsLoadingFinished
+                    || MissionState.Current == null)
                     return;
 
                 _wasPausedBeforePopup = MissionState.Current.Paused;
@@ -303,7 +320,8 @@ namespace SoldierBehaviorTweaks
         {
             try
             {
-                if (!_pauseStateCaptured || MissionState.Current == null)
+                if (!_pauseStateCaptured || Mission == null || Mission.MissionEnded
+                    || MissionState.Current == null)
                     return;
 
                 MissionState.Current.Paused = _wasPausedBeforePopup;
@@ -637,10 +655,11 @@ namespace SoldierBehaviorTweaks
                         if (!MissionBehaviorHelper.IsStablePlayerControlledFormation(formation)) continue;
                         formation.ApplyActionOnEachUnit(agent =>
                         {
-                            if (!agent.IsAIControlled) return;
                             if (_agentCrouchState.TryGetValue(agent.Index, out bool s) && s) return;
-                            agent.SetCrouchMode(true);
-                            _agentCrouchState[agent.Index] = true;
+                            int before = _agentCrouchState.Count;
+                            SetAgentCrouchState(agent, true);
+                            if (_agentCrouchState.Count > before)
+                                _agentCrouchState[agent.Index] = true;
                         });
                     }
 

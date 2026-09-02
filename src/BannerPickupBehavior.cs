@@ -28,7 +28,7 @@ namespace SoldierBehaviorTweaks
         public override void OnMissionTick(float dt)
         {
             var mission = Mission;
-            if (mission == null || !mission.IsLoadingFinished) return;
+            if (mission == null || mission.MissionEnded || !mission.IsLoadingFinished) return;
 
             _elapsed += dt;
             if (_elapsed < CheckInterval) return;
@@ -54,18 +54,36 @@ namespace SoldierBehaviorTweaks
             {
                 PruneAssignments(marking);
 
+                // 原版拾取旗帜会同步移除地面对象，先复制候选列表再执行拾取。
+                var banners = new List<SpawnedItemEntity>();
                 foreach (MissionObject missionObject in mission.ActiveMissionObjects)
                 {
                     if (missionObject is not SpawnedItemEntity spawnedItem) continue;
                     if (spawnedItem.IsRemoved || spawnedItem.IsDisabled || spawnedItem.IsDeactivated) continue;
                     if (!spawnedItem.IsBanner()) continue;
+                    banners.Add(spawnedItem);
+                }
+
+                foreach (SpawnedItemEntity spawnedItem in banners)
+                {
+                    if (mission.MissionEnded || spawnedItem == null
+                        || spawnedItem.IsRemoved || spawnedItem.IsDisabled || spawnedItem.IsDeactivated)
+                    {
+                        continue;
+                    }
 
                     Formation formation = bannerLogic.GetFormationFromBanner(spawnedItem);
                     if (!IsEligibleFormation(formation, settings)) continue;
                     if (!bannerLogic.IsFormationBanner(formation, spawnedItem)) continue;
 
-                    UIntPtr bannerKey = spawnedItem.GameEntity.Pointer;
-                    Vec2 bannerPosition = spawnedItem.GameEntity.GlobalPosition.AsVec2;
+                    WeakGameEntity bannerEntity = spawnedItem.GameEntity;
+                    if (!bannerEntity.IsValid)
+                        bannerEntity = spawnedItem.GameEntityWithWorldPosition.GameEntity;
+                    if (!bannerEntity.IsValid)
+                        continue;
+
+                    UIntPtr bannerKey = bannerEntity.Pointer;
+                    Vec2 bannerPosition = bannerEntity.GlobalPosition.AsVec2;
 
                     Agent? searcher = GetAssignedSearcher(bannerKey, formation, marking);
                     if (searcher == null)
@@ -78,7 +96,7 @@ namespace SoldierBehaviorTweaks
                     float distance = searcher.Position.AsVec2.Distance(bannerPosition);
                     if (distance <= PickupRadius)
                     {
-                        TryPickUpBanner(searcher, spawnedItem, bannerKey);
+                        TryPickUpBanner(searcher, mission, spawnedItem, bannerKey);
                     }
                     else if (distance <= SearchRadius + SearcherReassignRadius)
                     {
@@ -180,7 +198,9 @@ namespace SoldierBehaviorTweaks
 
         private static bool IsEligibleSearcher(Agent? agent, Formation formation)
         {
+            if (formation == null || formation.Team == null || formation.Team.Mission == null) return false;
             if (agent == null || !agent.IsActive()) return false;
+            if (agent.Mission != formation.Team.Mission) return false;
             if (agent.Formation != formation) return false;
             if (!agent.IsAIControlled || agent.IsMainAgent) return false;
             if (agent.Banner != null) return false;
@@ -191,33 +211,52 @@ namespace SoldierBehaviorTweaks
 
         private static void SendSearcherToBanner(Agent searcher, Mission mission, SpawnedItemEntity spawnedItem)
         {
-            Vec3 target = spawnedItem.GameEntity.GlobalPosition;
+            if (mission.MissionEnded || !searcher.IsActive() || searcher.Mission != mission
+                || spawnedItem.IsRemoved || spawnedItem.IsDisabled || spawnedItem.IsDeactivated)
+                return;
+
+            WeakGameEntity bannerEntity = spawnedItem.GameEntity;
+            if (!bannerEntity.IsValid)
+                bannerEntity = spawnedItem.GameEntityWithWorldPosition.GameEntity;
+            if (!bannerEntity.IsValid)
+                return;
+
+            Vec3 target = bannerEntity.GlobalPosition;
             WorldPosition targetPosition = new WorldPosition(mission.Scene, target);
             searcher.SetScriptedPosition(ref targetPosition, false, Agent.AIScriptedFrameFlags.GoToPosition);
         }
 
-        private void TryPickUpBanner(Agent searcher, SpawnedItemEntity spawnedItem, UIntPtr bannerKey)
+        private void TryPickUpBanner(Agent searcher, Mission mission, SpawnedItemEntity spawnedItem, UIntPtr bannerKey)
         {
             try
             {
+                if (mission.MissionEnded || !searcher.IsActive() || searcher.Mission != mission
+                    || searcher.Formation == null || spawnedItem.IsRemoved
+                    || spawnedItem.IsDisabled || spawnedItem.IsDeactivated)
+                {
+                    _assignedAgentByBanner.Remove(bannerKey);
+                    return;
+                }
+
                 if (!searcher.CanQuickPickUp(spawnedItem)) return;
 
+                // OnItemPickup 会立即改变原版地面物品集合，之后不再读取旗帜对象。
+                _assignedAgentByBanner.Remove(bannerKey);
                 searcher.OnItemPickup(spawnedItem, EquipmentIndex.ExtraWeaponSlot, out bool _);
                 searcher.DisableScriptedMovement();
-                Mission?.GetMissionBehavior<AgentMarkingSystem>()?.QueueBannerRefresh(searcher.Formation);
-                _assignedAgentByBanner.Remove(bannerKey);
+                mission.GetMissionBehavior<AgentMarkingSystem>()?.QueueBannerRefresh(searcher.Formation);
             }
             catch (Exception ex)
             {
                 Debug.Print($"[SoldierBehaviorTweaks] Banner pickup error: {ex.Message}");
             }
         }
-
         private void ReleaseSearcher(Agent searcher, UIntPtr bannerKey)
         {
             try
             {
-                searcher.DisableScriptedMovement();
+                if (searcher != null && searcher.IsActive())
+                    searcher.DisableScriptedMovement();
             }
             catch { }
 
