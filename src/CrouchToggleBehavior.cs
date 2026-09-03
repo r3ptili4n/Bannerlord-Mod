@@ -13,61 +13,19 @@ namespace SoldierBehaviorTweaks
     {
         public override MissionBehaviorType BehaviorType => MissionBehaviorType.Other;
 
-        // 使用主控角色索引作为复合键区分不同任务，避免跨战场残留旧队伍引用。
-        private static readonly Dictionary<int, HashSet<int>> _perPlayerCrouchFormations = new();
-        private static readonly object _lockObj = new();
+        private readonly HashSet<int> _crouchFormations = new();
 
-        /// <summary>获取当前任务中玩家对应的蹲下编队集合。</summary>
-        private static HashSet<int> GetOrCreateCrouchSet()
+        public bool IsFormationCrouchEnabled(int formationIndex)
         {
-            int key = Agent.Main?.Index ?? -1;
-            if (key < 0) return new HashSet<int>(); // 返回空集合，后续写入会被丢弃。
-
-            lock (_lockObj)
-            {
-                if (!_perPlayerCrouchFormations.TryGetValue(key, out var set))
-                {
-                    set = new HashSet<int>();
-                    _perPlayerCrouchFormations[key] = set;
-                }
-                return set;
-            }
+            return _crouchFormations.Contains(formationIndex);
         }
 
-        public static bool IsFormationCrouchEnabled(Team team, int formationIndex)
+        private void SetFormationCrouch(int formationIndex, bool enabled)
         {
-            var set = GetOrCreateCrouchSet();
-            lock (_lockObj)
-                return set.Contains(formationIndex);
-        }
-
-        private static void SetFormationCrouch(Team team, int formationIndex, bool enabled)
-        {
-            var set = GetOrCreateCrouchSet();
-            lock (_lockObj)
-            {
-                if (enabled)
-                    set.Add(formationIndex);
-                else
-                    set.Remove(formationIndex);
-            }
-        }
-
-        /// <summary>清理已经结束的任务残留玩家记录。</summary>
-        private static void CleanStaleEntries()
-        {
-            lock (_lockObj)
-            {
-                var deadKeys = new List<int>();
-                foreach (var kv in _perPlayerCrouchFormations)
-                {
-                    if (Agent.Main != null && kv.Key == Agent.Main.Index) continue;
-                    // 角色索引不再有效，视为过期记录。
-                    deadKeys.Add(kv.Key);
-                }
-                foreach (int key in deadKeys)
-                    _perPlayerCrouchFormations.Remove(key);
-            }
+            if (enabled)
+                _crouchFormations.Add(formationIndex);
+            else
+                _crouchFormations.Remove(formationIndex);
         }
 
         private GauntletLayer? _popupLayer;
@@ -75,7 +33,6 @@ namespace SoldierBehaviorTweaks
         private bool _popupOpen;
         private bool _pauseStateCaptured;
         private bool _wasPausedBeforePopup;
-        private float _applyTimer = -0.6f;
         private bool? _isCombatMission;
 
         private bool IsCombatMission()
@@ -176,7 +133,7 @@ namespace SoldierBehaviorTweaks
             bool anyCrouching = false;
             foreach (int idx in valid)
             {
-                if (IsFormationCrouchEnabled(team, idx))
+                if (IsFormationCrouchEnabled(idx))
                 {
                     anyCrouching = true;
                     break;
@@ -186,7 +143,7 @@ namespace SoldierBehaviorTweaks
             bool newState = !anyCrouching;
             foreach (int idx in valid)
             {
-                SetFormationCrouch(team, idx, newState);
+                SetFormationCrouch(idx, newState);
                 ApplyFormationCrouchState(team, idx, newState);
             }
 
@@ -202,8 +159,8 @@ namespace SoldierBehaviorTweaks
             Team? team = player.Team;
             if (team == null) return;
 
-            bool wasEnabled = IsFormationCrouchEnabled(team, formationIndex);
-            SetFormationCrouch(team, formationIndex, !wasEnabled);
+            bool wasEnabled = IsFormationCrouchEnabled(formationIndex);
+            SetFormationCrouch(formationIndex, !wasEnabled);
             ApplyFormationCrouchState(team, formationIndex, !wasEnabled);
 
             InformationManager.DisplayMessage(new InformationMessage(
@@ -225,7 +182,7 @@ namespace SoldierBehaviorTweaks
                 var screen = ScreenManager.TopScreen;
                 if (screen == null) return;
 
-                _popupVM = new FormationCrouchPopupVM(defaultIndex);
+                _popupVM = new FormationCrouchPopupVM(defaultIndex, IsFormationCrouchEnabled);
                 _popupVM.OnConfirmed += OnPopupConfirmed;
                 _popupVM.OnCancelled += OnPopupCancelled;
 
@@ -349,7 +306,7 @@ namespace SoldierBehaviorTweaks
             int formationIndex = _popupVM.SelectedFormationIndex;
 
             bool crouch = _popupVM.CrouchMode == 1;
-            SetFormationCrouch(team, formationIndex, crouch);
+            SetFormationCrouch(formationIndex, crouch);
             ApplyFormationCrouchState(team, formationIndex, crouch);
 
             InformationManager.DisplayMessage(new InformationMessage(
@@ -426,11 +383,7 @@ namespace SoldierBehaviorTweaks
             if (playerTeam == null)
                 return;
 
-            HashSet<int> crouchFormations;
-            lock (_lockObj)
-            {
-                crouchFormations = new HashSet<int>(GetOrCreateCrouchSet());
-            }
+            var crouchFormations = new HashSet<int>(_crouchFormations);
 
             if (crouchFormations.Count == 0)
             {
@@ -493,7 +446,7 @@ namespace SoldierBehaviorTweaks
                 return;
             }
 
-            bool shouldCrouch = IsFormationCrouchEnabled(formation.Team, formation.Index)
+            bool shouldCrouch = IsFormationCrouchEnabled(formation.Index)
                 && agent.IsAIControlled
                 && !agent.HasMount
                 && !MissionBehaviorHelper.IsPlayerSideFormationDelegated(formation);
@@ -589,151 +542,6 @@ namespace SoldierBehaviorTweaks
             }
         }
 
-        private void ApplyCrouchStates(float dt)
-        {
-            var mission = base.Mission;
-            if (mission == null || !mission.IsLoadingFinished) return;
-            if (!mission.IsDeploymentFinished) return;
-            if (!IsCombatMission()) return;
-
-            // 冲突策略保护。
-            var settings = SoldierBehaviorTweaksSettings.Instance;
-            if (settings != null && settings.ConflictStrategy == ConflictStrategy.Yield)
-            {
-                if (!_conflictModDetected.HasValue)
-                    _conflictModDetected = MissionBehaviorHelper.IsConflictModActive(mission);
-                if (_conflictModDetected.Value)
-                {
-                    // 先让所有正在蹲下的士兵站起，然后退出。
-                    try
-                    {
-                        var toStand = new List<int>();
-                        foreach (var kv in _agentCrouchState)
-                        {
-                            if (!kv.Value) continue;
-                            Agent? a = mission.FindAgentWithIndex(kv.Key);
-                            if (a != null && a.IsActive() && a.IsAIControlled)
-                                a.SetCrouchMode(false);
-                            toStand.Add(kv.Key);
-                        }
-                        foreach (int k in toStand)
-                            _agentCrouchState.Remove(k);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.Print($"[SoldierBehaviorTweaks] Yield-stand-up error: {ex.Message}");
-                    }
-                    return;
-                }
-            }
-
-            _applyTimer -= dt;
-            if (_applyTimer > 0f) return;
-            _applyTimer = 1f;
-
-            Team? playerTeam = Agent.Main?.Team;
-            if (playerTeam == null) return;
-
-            HashSet<int>? crouchFormations;
-            lock (_lockObj)
-            {
-                var set = GetOrCreateCrouchSet();
-                crouchFormations = set.Count > 0 ? new HashSet<int>(set) : null;
-            }
-
-            if (crouchFormations == null && _agentCrouchState.Count == 0)
-                return;
-
-            try
-            {
-                if (crouchFormations != null)
-                {
-                    foreach (Formation formation in playerTeam.FormationsIncludingSpecialAndEmpty)
-                    {
-                        if (formation == null || !crouchFormations.Contains(formation.Index)) continue;
-                        // 只在稳定、仍由玩家侧控制的编队上写入蹲下状态。
-                        if (!MissionBehaviorHelper.IsStablePlayerControlledFormation(formation)) continue;
-                        formation.ApplyActionOnEachUnit(agent =>
-                        {
-                            if (_agentCrouchState.TryGetValue(agent.Index, out bool s) && s) return;
-                            int before = _agentCrouchState.Count;
-                            SetAgentCrouchState(agent, true);
-                            if (_agentCrouchState.Count > before)
-                                _agentCrouchState[agent.Index] = true;
-                        });
-                    }
-
-                    // 让已从蹲下集合移除的编队士兵站起。
-                    var toStandUp = new List<int>();
-                    foreach (var kv in _agentCrouchState)
-                    {
-                        if (!kv.Value) continue;
-                        Agent? a = mission.FindAgentWithIndex(kv.Key);
-                        if (a == null || !a.IsActive())
-                        {
-                            toStandUp.Add(kv.Key);
-                            continue;
-                        }
-                        var fm = a.Formation;
-                        if (fm == null || !crouchFormations.Contains(fm.Index))
-                        {
-                            toStandUp.Add(kv.Key);
-                            continue;
-                        }
-
-                        if (!MissionBehaviorHelper.IsStablePlayerControlledFormation(fm))
-                        {
-                            toStandUp.Add(kv.Key);
-                            continue;
-                        }
-                    }
-                    foreach (int key in toStandUp)
-                        _agentCrouchState[key] = false;
-                }
-                else
-                {
-                    // 没有任何蹲下编队时，让所有记录中的士兵站起。
-                    foreach (var kv in _agentCrouchState)
-                    {
-                        if (!kv.Value) continue;
-                        Agent? a = mission.FindAgentWithIndex(kv.Key);
-                        if (a != null && a.IsActive() && a.Formation != null && MissionBehaviorHelper.IsStablePlayerControlledFormation(a.Formation))
-                            a.SetCrouchMode(false);
-                    }
-                    _agentCrouchState.Clear();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print($"[SoldierBehaviorTweaks] ApplyCrouchStates error: {ex.Message}");
-            }
-
-            // 周期性清理死亡或失效的角色记录。
-            _crouchCleanupCounter++;
-            if (_crouchCleanupCounter % 10 == 0)
-                CleanDeadCrouchAgents(mission);
-        }
-
-        private void CleanDeadCrouchAgents(Mission mission)
-        {
-            try
-            {
-                var deadKeys = new List<int>();
-                foreach (var kv in _agentCrouchState)
-                {
-                    Agent? a = mission.FindAgentWithIndex(kv.Key);
-                    if (a == null || !a.IsActive())
-                        deadKeys.Add(kv.Key);
-                }
-                foreach (int key in deadKeys)
-                    _agentCrouchState.Remove(key);
-            }
-            catch (Exception ex)
-            {
-                Debug.Print($"[SoldierBehaviorTweaks] CleanDeadCrouchAgents error: {ex.Message}");
-            }
-        }
-
         public override void OnRemoveBehavior()
         {
             var mission = base.Mission;
@@ -742,7 +550,7 @@ namespace SoldierBehaviorTweaks
             _agentCrouchState.Clear();
             _crouchBootstrapDone = false;
             ClosePopup();
-            CleanStaleEntries();
+            _crouchFormations.Clear();
             base.OnRemoveBehavior();
         }
 
@@ -754,6 +562,7 @@ namespace SoldierBehaviorTweaks
             _agentCrouchState.Clear();
             _crouchBootstrapDone = false;
             ClosePopup();
+            _crouchFormations.Clear();
             base.OnEndMission();
         }
     }

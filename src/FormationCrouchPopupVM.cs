@@ -12,9 +12,11 @@ namespace SoldierBehaviorTweaks
         private int _selectedFormationIndex;
         private int _crouchMode;
         private string _title = string.Empty;
+        private readonly Func<int, bool> _isFormationCrouchEnabled;
 
-        public FormationCrouchPopupVM(int defaultFormationIndex)
+        public FormationCrouchPopupVM(int defaultFormationIndex, Func<int, bool> isFormationCrouchEnabled)
         {
+            _isFormationCrouchEnabled = isFormationCrouchEnabled ?? throw new ArgumentNullException(nameof(isFormationCrouchEnabled));
             _selectedFormationIndex = defaultFormationIndex < 0 ? 0 : defaultFormationIndex > 7 ? 7 : defaultFormationIndex;
             UpdateTitle();
             UpdateFormationState();
@@ -82,9 +84,7 @@ namespace SoldierBehaviorTweaks
 
         private void UpdateFormationState()
         {
-            var playerTeam = Agent.Main?.Team;
-            if (playerTeam == null) return;
-            CrouchMode = CrouchToggleBehavior.IsFormationCrouchEnabled(playerTeam, _selectedFormationIndex) ? 1 : 0;
+            CrouchMode = _isFormationCrouchEnabled(_selectedFormationIndex) ? 1 : 0;
         }
 
         public void ExecuteScrollLeft()

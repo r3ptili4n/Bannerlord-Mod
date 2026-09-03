@@ -28,31 +28,53 @@ namespace SoldierBehaviorTweaks
         public override void OnMissionTick(float dt)
         {
             var mission = Mission;
-            if (mission == null || mission.MissionEnded || !mission.IsLoadingFinished) return;
+            if (mission == null) return;
+            if (mission.MissionEnded)
+            {
+                ReleaseAllSearchers(mission);
+                return;
+            }
+            if (!mission.IsLoadingFinished) return;
+
+            SoldierBehaviorTweaksSettings? settings = SoldierBehaviorTweaksSettings.Instance;
+            if (settings != null && !settings.EnableBannerPickup)
+            {
+                ReleaseAllSearchers(mission);
+                return;
+            }
 
             _elapsed += dt;
             if (_elapsed < CheckInterval) return;
             _elapsed = 0f;
 
-            SoldierBehaviorTweaksSettings? settings = SoldierBehaviorTweaksSettings.Instance;
-            if (settings != null && !settings.EnableBannerPickup) return;
-
             if (settings != null && settings.ConflictStrategy == ConflictStrategy.Yield)
             {
                 if (!_conflictModDetected.HasValue)
                     _conflictModDetected = MissionBehaviorHelper.IsConflictModActive(mission);
-                if (_conflictModDetected.Value) return;
+                if (_conflictModDetected.Value)
+                {
+                    ReleaseAllSearchers(mission);
+                    return;
+                }
             }
 
             BannerBearerLogic? bannerLogic = mission.GetMissionBehavior<BannerBearerLogic>();
-            if (bannerLogic == null) return;
+            if (bannerLogic == null)
+            {
+                ReleaseAllSearchers(mission);
+                return;
+            }
 
             AgentMarkingSystem? marking = mission.GetMissionBehavior<AgentMarkingSystem>();
-            if (marking == null) return;
+            if (marking == null)
+            {
+                ReleaseAllSearchers(mission);
+                return;
+            }
 
             try
             {
-                PruneAssignments(marking);
+                PruneAssignments(mission, marking);
 
                 // 原版拾取旗帜会同步移除地面对象，先复制候选列表再执行拾取。
                 var banners = new List<SpawnedItemEntity>();
@@ -64,6 +86,7 @@ namespace SoldierBehaviorTweaks
                     banners.Add(spawnedItem);
                 }
 
+                var activeBannerKeys = new HashSet<UIntPtr>();
                 foreach (SpawnedItemEntity spawnedItem in banners)
                 {
                     if (mission.MissionEnded || spawnedItem == null
@@ -72,20 +95,22 @@ namespace SoldierBehaviorTweaks
                         continue;
                     }
 
-                    Formation formation = bannerLogic.GetFormationFromBanner(spawnedItem);
-                    if (!IsEligibleFormation(formation, settings)) continue;
-                    if (!bannerLogic.IsFormationBanner(formation, spawnedItem)) continue;
-
-                    WeakGameEntity bannerEntity = spawnedItem.GameEntity;
-                    if (!bannerEntity.IsValid)
-                        bannerEntity = spawnedItem.GameEntityWithWorldPosition.GameEntity;
-                    if (!bannerEntity.IsValid)
+                    if (!TryGetBannerEntity(spawnedItem, out WeakGameEntity bannerEntity))
                         continue;
 
                     UIntPtr bannerKey = bannerEntity.Pointer;
+                    activeBannerKeys.Add(bannerKey);
                     Vec2 bannerPosition = bannerEntity.GlobalPosition.AsVec2;
 
-                    Agent? searcher = GetAssignedSearcher(bannerKey, formation, marking);
+                    Formation formation = bannerLogic.GetFormationFromBanner(spawnedItem);
+                    if (!IsEligibleFormation(formation, settings)
+                        || !bannerLogic.IsFormationBanner(formation, spawnedItem))
+                    {
+                        ReleaseAssignedSearcher(mission, bannerKey);
+                        continue;
+                    }
+
+                    Agent? searcher = GetAssignedSearcher(bannerKey, formation, mission, marking);
                     if (searcher == null)
                     {
                         searcher = FindBestSearcher(formation, bannerPosition, marking);
@@ -107,6 +132,9 @@ namespace SoldierBehaviorTweaks
                         ReleaseSearcher(searcher, bannerKey);
                     }
                 }
+
+                // 当前帧已经不存在的旗帜，其搜索者不能继续保留脚本移动。
+                ReleaseAssignmentsForMissingBanners(mission, activeBannerKeys);
             }
             catch (Exception ex)
             {
@@ -131,31 +159,35 @@ namespace SoldierBehaviorTweaks
             return true;
         }
 
-        private void PruneAssignments(AgentMarkingSystem marking)
+        private void PruneAssignments(Mission mission, AgentMarkingSystem marking)
         {
-            var dead = new List<UIntPtr>();
+            var stale = new List<KeyValuePair<UIntPtr, int>>();
             foreach (var kv in _assignedAgentByBanner)
             {
                 if (!marking.ActiveAgentsByIndex.TryGetValue(kv.Value, out Agent? agent)
                     || agent == null
                     || !agent.IsActive())
                 {
-                    dead.Add(kv.Key);
+                    stale.Add(kv);
                 }
             }
 
-            foreach (UIntPtr key in dead)
-                _assignedAgentByBanner.Remove(key);
+            foreach (var kv in stale)
+            {
+                Agent? agent = mission.FindAgentWithIndex(kv.Value);
+                ReleaseSearcher(agent, kv.Key);
+            }
         }
 
-        private Agent? GetAssignedSearcher(UIntPtr bannerKey, Formation formation, AgentMarkingSystem marking)
+        private Agent? GetAssignedSearcher(UIntPtr bannerKey, Formation formation, Mission mission,
+            AgentMarkingSystem marking)
         {
             if (!_assignedAgentByBanner.TryGetValue(bannerKey, out int agentIndex))
                 return null;
 
             if (!marking.ActiveAgentsByIndex.TryGetValue(agentIndex, out Agent? agent))
             {
-                _assignedAgentByBanner.Remove(bannerKey);
+                ReleaseSearcher(mission.FindAgentWithIndex(agentIndex), bannerKey);
                 return null;
             }
 
@@ -166,6 +198,36 @@ namespace SoldierBehaviorTweaks
             }
 
             return agent;
+        }
+
+        private static bool TryGetBannerEntity(SpawnedItemEntity spawnedItem, out WeakGameEntity bannerEntity)
+        {
+            bannerEntity = spawnedItem.GameEntity;
+            if (!bannerEntity.IsValid)
+                bannerEntity = spawnedItem.GameEntityWithWorldPosition.GameEntity;
+            return bannerEntity.IsValid;
+        }
+
+        private void ReleaseAssignedSearcher(Mission? mission, UIntPtr bannerKey)
+        {
+            if (!_assignedAgentByBanner.TryGetValue(bannerKey, out int agentIndex))
+                return;
+
+            Agent? searcher = mission == null ? null : mission.FindAgentWithIndex(agentIndex);
+            ReleaseSearcher(searcher, bannerKey);
+        }
+
+        private void ReleaseAssignmentsForMissingBanners(Mission mission, HashSet<UIntPtr> activeBannerKeys)
+        {
+            var missing = new List<UIntPtr>();
+            foreach (UIntPtr key in _assignedAgentByBanner.Keys)
+            {
+                if (!activeBannerKeys.Contains(key))
+                    missing.Add(key);
+            }
+
+            foreach (UIntPtr key in missing)
+                ReleaseAssignedSearcher(mission, key);
         }
 
         private static Agent? FindBestSearcher(Formation formation, Vec2 bannerPosition, AgentMarkingSystem marking)
@@ -234,24 +296,29 @@ namespace SoldierBehaviorTweaks
                     || searcher.Formation == null || spawnedItem.IsRemoved
                     || spawnedItem.IsDisabled || spawnedItem.IsDeactivated)
                 {
-                    _assignedAgentByBanner.Remove(bannerKey);
+                    ReleaseSearcher(searcher, bannerKey);
                     return;
                 }
 
                 if (!searcher.CanQuickPickUp(spawnedItem)) return;
 
-                // OnItemPickup 会立即改变原版地面物品集合，之后不再读取旗帜对象。
-                _assignedAgentByBanner.Remove(bannerKey);
-                searcher.OnItemPickup(spawnedItem, EquipmentIndex.ExtraWeaponSlot, out bool _);
-                searcher.DisableScriptedMovement();
-                mission.GetMissionBehavior<AgentMarkingSystem>()?.QueueBannerRefresh(searcher.Formation);
+                try
+                {
+                    // OnItemPickup 会立即改变原版地面物品集合，之后不再读取旗帜对象。
+                    searcher.OnItemPickup(spawnedItem, EquipmentIndex.ExtraWeaponSlot, out bool _);
+                    mission.GetMissionBehavior<AgentMarkingSystem>()?.QueueBannerRefresh(searcher.Formation);
+                }
+                finally
+                {
+                    ReleaseSearcher(searcher, bannerKey);
+                }
             }
             catch (Exception ex)
             {
                 Debug.Print($"[SoldierBehaviorTweaks] Banner pickup error: {ex.Message}");
             }
         }
-        private void ReleaseSearcher(Agent searcher, UIntPtr bannerKey)
+        private void ReleaseSearcher(Agent? searcher, UIntPtr bannerKey)
         {
             try
             {
@@ -263,10 +330,43 @@ namespace SoldierBehaviorTweaks
             _assignedAgentByBanner.Remove(bannerKey);
         }
 
+        private void ReleaseAllSearchers(Mission? mission)
+        {
+            var agentIndices = new HashSet<int>(_assignedAgentByBanner.Values);
+            try
+            {
+                foreach (int agentIndex in agentIndices)
+                {
+                    try
+                    {
+                        Agent? searcher = mission == null ? null : mission.FindAgentWithIndex(agentIndex);
+                        if (searcher != null && searcher.IsActive())
+                            searcher.DisableScriptedMovement();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.Print($"[SoldierBehaviorTweaks] Searcher release error: {ex.Message}");
+                    }
+                }
+            }
+            finally
+            {
+                _assignedAgentByBanner.Clear();
+            }
+        }
+
         public override void OnRemoveBehavior()
         {
-            _assignedAgentByBanner.Clear();
+            ReleaseAllSearchers(base.Mission);
+            _conflictModDetected = null;
             base.OnRemoveBehavior();
+        }
+
+        protected override void OnEndMission()
+        {
+            ReleaseAllSearchers(base.Mission);
+            _conflictModDetected = null;
+            base.OnEndMission();
         }
     }
 }

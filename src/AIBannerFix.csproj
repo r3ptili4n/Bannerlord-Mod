@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bannerlord.MCM" Version="5.11.4" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

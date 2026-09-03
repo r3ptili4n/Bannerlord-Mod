@@ -150,9 +150,6 @@ namespace SoldierBehaviorTweaks
                     continue;
                 }
 
-                if (MissionBehaviorHelper.IsPlayerSideFormationDelegated(formation))
-                    continue;
-
                 ReleaseBearersInFormation(formation, bannerLogic);
                 finished.Add(formation);
             }
